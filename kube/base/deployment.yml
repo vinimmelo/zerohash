@@ -1,0 +1,51 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zerohash
+spec:
+  selector:
+    matchLabels:
+      app: zerohash
+  template:
+    metadata:
+      labels:
+        app: zerohash
+    spec:
+      containers:
+      - name: zerohash
+        image: vinimmelo/zerohash:latest
+        env:
+          - name: WEBSOCKET_URI
+            value: "ws-feed.exchange.coinbase.com"
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 8000
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+        resources:
+          limits:
+            cpu: 10m
+            memory: 30Mi
+          requests:
+            cpu: 10m
+            memory: 30Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zerohash
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: zerohash
